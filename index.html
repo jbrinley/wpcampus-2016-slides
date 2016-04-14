@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+
+	<title>Leveraging your Git workflow to improve quality and communication - WordCamp Jacksonville 2016</title>
+
+	<meta name="description" content="Git is an amazing tool for maintaining version control for your code, but that’s just the beginning of its utility. With a little bit of planning and organization, you can design a workflow for yourself and your team that leverages the power of git to encourage clear communication, consistent code reviews, and effective QA testing. I’ll share the lessons I’ve learned working with a growing team of designers, developers, and testers building amazing WordPress sites with Modern Tribe. When and how to create a branch, what a pull request is, what to look for in a code review, when to merge, and more.">
+	<meta name="author" content="Jonathan Brinley">
+
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+	<link rel="stylesheet" href="reveal.js/css/reveal.css">
+	<link rel="stylesheet" href="reveal.js/css/theme/sky.css" id="theme">
+
+	<!-- Code syntax highlighting -->
+	<link rel="stylesheet" href="reveal.js/lib/css/zenburn.css">
+
+	<!-- Printing and PDF exports -->
+	<script>
+		var link = document.createElement( 'link' );
+		link.rel = 'stylesheet';
+		link.type = 'text/css';
+		link.href = window.location.search.match( /print-pdf/gi ) ? 'reveal.js/css/print/pdf.css' : 'reveal.js/css/print/paper.css';
+		document.getElementsByTagName( 'head' )[0].appendChild( link );
+	</script>
+
+	<!--[if lt IE 9]>
+	<script src="reveal.js/lib/js/html5shiv.js"></script>
+	<![endif]-->
+
+	<style type="text/css">
+		.reveal .footer {
+			position: fixed;
+			top: 0px;
+			right: 0px;
+			font-size: 16px;
+			white-space: nowrap;
+			z-index: 2;
+			color: #eee;
+			background-color: rgba(0, 0, 0, 0.25);
+			padding: 0.1em 1.5em 0.2em 2em;
+		}
+		.front .reveal .footer {
+			top: auto;
+			right: auto;
+			left: 20px;
+			bottom: 20px;
+		}
+		.reveal .footer a {
+			color: #eee;
+		}
+		.reveal .footer p {
+			margin: 0;
+		}
+		.reveal .slides img {
+			border: none;
+		}
+
+		.reveal .slides img.bare {
+			background: none;
+			box-shadow: none;
+		}
+
+		.reveal figcaption cite {
+			font-size: 40%;
+		}
+
+		.reveal code {
+			text-transform: none;
+		}
+
+		section.boxed {
+			background-color: rgba(0,0,0,0.25);
+			color: #eee;
+		}
+
+		section.boxed h1,
+		section.boxed h2,
+		section.boxed h3,
+		section.boxed h4 {
+			color: #eee;
+		}
+
+		.reveal h1,
+		.reveal h2,
+		.reveal h3,
+		.reveal h4,
+		.reveal h5,
+		.reveal h6 {
+			text-transform: none;
+		}
+
+		figcaption cite {
+			color: #888;
+		}
+	</style>
+</head>
+
+<body>
+
+<div class="reveal">
+	<div class="footer">
+		<p>Jonathan Brinley
+			• <a href="http://xplus3.net/">xplus3.net</a>
+			• <a href="http://twitter.com/jbrinley">@jbrinley</a>
+			• Slides: <a href="http://flightless.us/slides/jax-2016/">flightless.us/wcjax2016</a>
+		</p>
+	</div>
+
+	<div class="slides">
+		<section class="boxed" data-state="front" data-background-image="images/Canaletto_1920-1200.jpg">
+			<h1 style="font-size: 3em;clear:none;text-transform:none">Leveraging your Git workflow to improve quality and communication</h1>
+		</section>
+
+		<section>
+			<h2>Jonathan Brinley</h2>
+			<p class="fragment" data-fragment-index="2"><img class="bare" width="1000" height="140" data-src="images/tribe-logo-color.png" alt="Modern Tribe" /></p>
+			<p class="fragment" data-fragment-index="1"><img class="bare" width="390" height="242" data-src="images/logo-large.png" alt="Flightless" /></p>
+		</section>
+
+		<section class="boxed" data-background="images/Sayulita.jpg" data-background-size="contain">
+			<h1>2010</h1>
+		</section>
+
+		<section class="boxed" data-background="images/tribe-trip-2016.jpg" data-background-size="contain">
+			<h1>2016</h1>
+		</section>
+
+		<section class="boxed" data-background="images/arcimboldo_1920-1200.jpg">
+			<code style="font-size:1.5em;">You today !== You tomorrow</code>
+		</section>
+
+		<section class="boxed" data-background="images/aivazovsky_wave-1920-1200.jpg" data-background-size="contain">
+			<h1>Prerequisite</h1>
+			<h2>Use version control</h2>
+			<p class="fragment" data-fragment-index="1">It should be Git</p>
+		</section>
+
+		<section class="boxed" data-background="images/durand-kindred-1920-1200.jpg" data-background-size="cover">
+			<h1>Formal<br />&amp;<br />Consistent</h1>
+		</section>
+
+		<section>
+			<a href="images/Modern_Tribe_Code_Review_Workflow.png"><img src="images/Modern_Tribe_Code_Review_Workflow.png" alt="Modern Tribe code review workflow diagram" style="height:95vh; width: auto; float: left; margin-top: -2vh;" /></a>
+			<h2>Modern Tribe&rsquo;s Workflow</h2>
+		</section>
+
+		<section style="background-color: rgba(0,0,0,0.5);" class="boxed" data-background-image="images/escher-waterfall.jpg" data-background-repeat="repeat" data-background-size="contain">
+			<h1>Agile Waterfall</h1>
+		</section>
+
+		<section>
+			<h2>Feature Branches</h2>
+			<img src="images/Git%20Branching%20Model%20-%20Sprint%20Workflow.png" alt="sprint workflow diagram" />
+		</section>
+
+		<section>
+			<h2>Hotfix Branch</h2>
+			<img src="images/Git%20Branching%20Model%20-%20Hotfix%20Workflow.png" alt="hotfix workflow diagram" />
+		</section>
+
+		<section>
+			<h2>Feature Branch</h2>
+			<img src="images/Git%20Branching%20Model%20-%20Feature%20Branch%20Workflow.png" alt="feature branch workflow diagram" />
+		</section>
+
+		<section>
+			<h2>Pull Request</h2>
+			<img src="images/Github%20-%20Select%20Branch.png" alt="Select a branch on github" />
+		</section>
+
+		<section>
+			<h2>Feature Branch</h2>
+			<img src="images/Git%20Branching%20Model%20-%20Feature%20Branch%20Workflow.png" alt="feature branch workflow diagram" />
+		</section>
+
+		<section class="boxed" data-background-image="images/Klee-revolving-house-1920-1200.jpg">
+			<h2>Branch?</h2>
+			<h1 class="fragment" data-fragment-index="1">Yes</h1>
+		</section>
+
+		<section class="" data-background-image="images/Klee-revolving-house-1920-1200.jpg">
+			<img src="images/github-branches.png" alt="branch tree from github" />
+		</section>
+
+		<section data-transition="slide-in none-out">
+			<img src="images/Git%20Branching%20Model%20-%20When%20to%20review%201.png" alt="review before you code" />
+		</section>
+
+		<section data-transition="none">
+			<img src="images/Git%20Branching%20Model%20-%20When%20to%20review%202.png" alt="review while you code" />
+		</section>
+
+		<section data-transition="none-in slide-out">
+			<img src="images/Git%20Branching%20Model%20-%20When%20to%20review%203.png" alt="review after you code" />
+		</section>
+
+		<section class="boxed" data-background-image="images/friedrich-ice-1920-1200.jpg">
+			<h3>Code review: Security</h3>
+			<ul>
+				<li class="fragment">User input</li>
+				<li class="fragment">Browser output</li>
+				<li class="fragment">Database queries</li>
+			</ul>
+
+		</section>
+
+		<section class="boxed" data-background-image="images/degas_1680-1050.jpg">
+			<h3>Code review: Performance</h3>
+			<ul>
+				<li class="fragment">Database queries</li>
+				<li class="fragment">Remote requests</li>
+				<li class="fragment">Complex calculations</li>
+			</ul>
+
+		</section>
+
+		<section style="background-color: rgba(0,0,0,0.5);" class="boxed" data-background-image="images/seurat_1680-1050.jpg">
+			<h3>Code review: coding standards</h3>
+			<ul>
+				<li class="fragment">Format</li>
+				<li class="fragment">Internationalization</li>
+				<li class="fragment">Accessiblity</li>
+			</ul>
+
+		</section>
+
+		<section style="background-color: rgba(0,0,0,0.5);" class="boxed" data-background-image="images/Bruegel_Proverbs_1920-1200.jpg">
+			<h3>Code review: maintainability</h3>
+			<ul>
+				<li class="fragment">Architecture</li>
+				<li class="fragment">Automated tests</li>
+				<li class="fragment">Nomenclature</li>
+				<li class="fragment">Documentation</li>
+			</ul>
+
+		</section>
+
+		<section data-background-image="images/raphael_1680-1050.jpg">
+			<h1 style="color: #eee; background-color: rgba(0,0,0,0.25);">Relax</h1>
+			<br/><br/><br/><br/><br/><br/>
+		</section>
+
+		<section class="boxed" data-background-image="images/cezanne-orange-1920-1200.jpg">
+			<h1>Prioritize</h1>
+		</section>
+
+		<section class="boxed" data-background-image="images/macke_1680-1050.jpg">
+			<h1>Wear hats</h1>
+		</section>
+
+		<section class="boxed" data-background-image="images/marc_1600-1200.jpg">
+			<h1>Resources</h1>
+
+		</section>
+
+		<section>
+			<h2>Jonathan Brinley</h2>
+			<p>http://xplus3.net/ • jonathan@tri.be • @jbrinley</p>
+			<p><img class="bare" width="1000" height="140" data-src="images/tribe-logo-color.png" alt="Modern Tribe" /></p>
+			<p><img class="bare" width="390" height="242" data-src="images/logo-large.png" alt="Flightless" /></p>
+		</section>
+
+
+	</div>
+
+</div>
+
+<script src="reveal.js/lib/js/head.min.js"></script>
+<script src="reveal.js/js/reveal.js"></script>
+
+<script>
+
+	// Full list of configuration options available at:
+	// https://github.com/hakimel/reveal.js#configuration
+	Reveal.initialize({
+		controls: true,
+		progress: true,
+		history: true,
+		center: true,
+
+		transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+		// Optional reveal.js plugins
+		dependencies: [
+			{ src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+			{ src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+			{ src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+			{ src: 'reveal.js/plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+			{ src: 'reveal.js/plugin/zoom-js/zoom.js', async: true },
+			{ src: 'reveal.js/plugin/notes/notes.js', async: true }
+		]
+	});
+
+</script>
+
+</body>
+</html>
