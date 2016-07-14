@@ -4,9 +4,9 @@
 <head>
 	<meta charset="utf-8">
 
-	<title>Leveraging your Git workflow to improve quality and communication - WordCamp Jacksonville 2016</title>
+	<title>Right level, right access: extending user roles & permissions to support higher ed workflows - WP Campus 2016</title>
 
-	<meta name="description" content="Git is an amazing tool for maintaining version control for your code, but that’s just the beginning of its utility. With a little bit of planning and organization, you can design a workflow for yourself and your team that leverages the power of git to encourage clear communication, consistent code reviews, and effective QA testing. I’ll share the lessons I’ve learned working with a growing team of designers, developers, and testers building amazing WordPress sites with Modern Tribe. When and how to create a branch, what a pull request is, what to look for in a code review, when to merge, and more.">
+	<meta name="description" content="Out of the box, WordPress provides a handful of user roles, from Subscriber to Administrator, each with an increasing level of access to manage content and settings on the site. While these roles provide a great starting point for many WordPress sites, they don’t offer the granularity one expects in a large organization with complex editorial workflows. Fortunately, these roles just begin to tap into the power of WordPress’s underlying capabilities API, which provides fine-grained access control for every aspect of the site’s administration, from controlling who can access a settings screen to which users can edit or publish a particular post. This presentation focuses on the technical aspects of role and capability management in WordPress. How do you create and edit user roles? How do you dynamically filter capabilities? What the heck is a “meta capability”? How can you have more control than the various role editing plugins provide? We’ll take a journey through the code to learn the most effective and efficient ways to manage your users’ editorial and administrative experiences, using some examples from solutions Modern Tribe has implemented at Stanford Law School and Harvard Law School.">
 	<meta name="author" content="Jonathan Brinley">
 
 	<meta name="apple-mobile-web-app-capable" content="yes" />
@@ -38,18 +38,14 @@
 			position: fixed;
 			top: 0px;
 			right: 0px;
+			left: 0px;
 			font-size: 16px;
 			white-space: nowrap;
 			z-index: 2;
 			color: #eee;
-			background-color: rgba(0, 0, 0, 0.25);
+			background-color: rgba(0, 0, 0, 0.5);
 			padding: 0.1em 1.5em 0.2em 2em;
-		}
-		.front .reveal .footer {
-			top: auto;
-			right: auto;
-			left: 20px;
-			bottom: 20px;
+			text-align: center;
 		}
 		.reveal .footer a {
 			color: #eee;
@@ -96,7 +92,17 @@
 			text-transform: none;
 		}
 
-		figcaption cite {
+		.reveal h1 {
+			font-size: 3em;
+		}
+
+		.reveal h2 {
+			font-size: 1.75em;
+		}
+
+		figcaption cite,
+		figcaption cite a,
+		.boxed figcaption cite a {
 			color: #888;
 		}
 	</style>
@@ -107,192 +113,349 @@
 <div class="reveal">
 	<div class="footer">
 		<p>Jonathan Brinley
-			• <a href="http://xplus3.net/">xplus3.net</a>
 			• <a href="http://twitter.com/jbrinley">@jbrinley</a>
-			• #wcjax
-			• Slides: <a href="http://flightless.us/slides/jax-2016/">flightless.us/wcjax2016</a>
+			• #WPCampus
+			• Slides: <a href="http://flightless.us/slides/wpcampus-2016/">flightless.us/wpcampus2016</a>
 		</p>
 	</div>
 
 	<div class="slides">
-		<section class="boxed" data-state="front" data-background-image="images/Canaletto_1920-1200.jpg">
-			<h1 style="font-size: 3em;clear:none;text-transform:none">Leveraging your Git workflow to improve quality and communication</h1>
-			<figure><figcaption><cite>Regatta view from Ca'Foscari / Canaletto</cite></figcaption></figure>
+		<section class="boxed" data-state="front" data-background-image="images/portcullis_at_cahir_castle.jpg">
+			<h1 style="font-size: 3em;clear:none;text-transform:none">Right level<br />Right access</h1>
+			<h2>Extending user roles & permissions to support higher ed workflows</h2>
+			<figure><figcaption><cite><a href="https://commons.wikimedia.org/wiki/File:Cahir_Castle_Portcullis_by_Kevin_King.jpg">Cahir Castle Portcullis</a></cite></figcaption></figure>
 		</section>
 
 		<section>
 			<h2>Jonathan Brinley</h2>
-			<p class="fragment" data-fragment-index="2"><img class="bare" width="1000" height="140" data-src="images/tribe-logo-color.png" alt="Modern Tribe" /></p>
-			<p class="fragment" data-fragment-index="1"><img class="bare" width="390" height="242" data-src="images/logo-large.png" alt="Flightless" /></p>
-		</section>
-
-		<section class="boxed" data-background="images/Sayulita.jpg" data-background-size="contain">
-			<h1>2010</h1>
-		</section>
-
-		<section class="boxed" data-background="images/modern-tribe-2016.jpg" data-background-size="contain">
-			<h1>2016</h1>
-		</section>
-
-		<section class="boxed" data-background="images/arcimboldo_1920-1200.jpg">
-			<code style="font-size:1.5em;">You today !== You tomorrow</code>
-			<figure><figcaption><cite>Vegetables in a Bowl, or, the Gardener / Giuseppe Arcimboldo</cite></figcaption></figure>
-		</section>
-
-		<section class="boxed" data-background="images/aivazovsky_wave-1920-1200.jpg" data-background-size="contain">
-			<h1>Prerequisite</h1>
-			<h2>Use version control</h2>
-			<p class="fragment" data-fragment-index="1">It should be Git</p>
-			<figure><figcaption><cite>The Ninth Wave / Ivan Aivazovsky</cite></figcaption></figure>
-		</section>
-
-		<section class="boxed" data-background="images/durand-kindred-1920-1200.jpg" data-background-size="cover">
-			<h1>Formal<br />&amp;<br />Consistent</h1>
-			<figure><figcaption><cite>The Kindred Spirits / Asher Brown Durand</cite></figcaption></figure>
-		</section>
-
-		<section>
-			<a href="images/Modern_Tribe_Code_Review_Workflow.png"><img src="images/Modern_Tribe_Code_Review_Workflow.png" alt="Modern Tribe code review workflow diagram" style="height:95vh; width: auto; float: left; margin-top: -2vh;" /></a>
-			<h2>Modern Tribe&rsquo;s Workflow</h2>
-		</section>
-
-		<section style="background-color: rgba(0,0,0,0.5);" class="boxed" data-background-image="images/escher-waterfall.jpg" data-background-repeat="repeat" data-background-size="contain">
-			<h1>Agile Waterfall</h1>
-			<figure><figcaption><cite>Waterfall / M.C. Escher</cite></figcaption></figure>
-		</section>
-
-		<section>
-			<h2>Feature Branches</h2>
-			<img src="images/Git%20Branching%20Model%20-%20Sprint%20Workflow.png" alt="sprint workflow diagram" />
-		</section>
-
-		<section>
-			<h2>Hotfix Branch</h2>
-			<img src="images/Git%20Branching%20Model%20-%20Hotfix%20Workflow.png" alt="hotfix workflow diagram" />
-		</section>
-
-		<section class="boxed" data-background-image="images/Klee-revolving-house-1920-1200.jpg">
-			<h2>Branch?</h2>
-			<h1 class="fragment" data-fragment-index="1">Yes</h1>
-			<figure><figcaption><cite>Revolving House / Paul Klee</cite></figcaption></figure>
-		</section>
-
-		<section>
-			<img src="images/branches.png" alt="branch tree from github" />
-		</section>
-
-		<section>
-			<h2>Why am I here?</h2>
-			<img src="images/Git%20Branching%20Model%20-%20When%20to%20review%201.png" alt="review before you code" />
-		</section>
-
-		<section>
-			<h2>Where are we going?</h2>
-			<img src="images/Git%20Branching%20Model%20-%20When%20to%20review%202.png" alt="review while you code" />
-		</section>
-
-		<section>
-			<h2>Pull Request</h2>
-			<img src="images/Github%20-%20Select%20Branch.png" alt="Select a branch on github" />
-		</section>
-
-		<section>
-			<h2>Did we get there?</h2>
-			<img src="images/Git%20Branching%20Model%20-%20When%20to%20review%203.png" alt="review after you code" />
-		</section>
-
-		<section class="boxed" data-background-image="images/monet_1920-1200.jpg" data-background-size="cover">
-			<h2>Why?</h2>
-			<ul>
-				<li>Quality</li>
-				<li>Comfort</li>
-				<li>Mentorship</li>
-			</ul>
-			<figure><figcaption><cite>Bridge over a Pond of Water Lilies / Claude Monet</cite></figcaption></figure>
-		</section>
-
-		<section class="boxed" data-background-image="images/friedrich-ice-1920-1200.jpg">
-			<h3>Code review: Security</h3>
-			<ul>
-				<li class="fragment">User input</li>
-				<li class="fragment">Browser output</li>
-				<li class="fragment">Database queries</li>
-			</ul>
-			<figure><figcaption><cite>The Sea of Ice / Caspar David Friedrich</cite></figcaption></figure>
-		</section>
-
-		<section class="boxed" data-background-image="images/degas_1680-1050.jpg">
-			<h3>Code review: Performance</h3>
-			<ul>
-				<li class="fragment">Database queries</li>
-				<li class="fragment">Remote requests</li>
-				<li class="fragment">Complex calculations</li>
-			</ul>
-			<figure><figcaption><cite>Ballet Rehearsal / Edgar Degas</cite></figcaption></figure>
-		</section>
-
-		<section style="background-color: rgba(0,0,0,0.5);" class="boxed" data-background-image="images/seurat_1680-1050.jpg">
-			<h3>Code review: coding standards</h3>
-			<ul>
-				<li class="fragment">Format</li>
-				<li class="fragment">Internationalization</li>
-				<li class="fragment">Accessiblity</li>
-			</ul>
-			<figure><figcaption><cite>A Sunday Afternoon on the Island of La Grande Jatte / Georges-Pierre Seurat</cite></figcaption></figure>
-		</section>
-
-		<section style="background-color: rgba(0,0,0,0.5);" class="boxed" data-background-image="images/Bruegel_Proverbs_1920-1200.jpg">
-			<h3>Code review: maintainability</h3>
-			<ul>
-				<li class="fragment">Architecture</li>
-				<li class="fragment">Automated tests</li>
-				<li class="fragment">Nomenclature</li>
-				<li class="fragment">Documentation</li>
-			</ul>
-			<figure><figcaption><cite>Netherlandish Proverbs / Pieter Bruegel the Elder</cite></figcaption></figure>
-		</section>
-
-		<section data-background-image="images/raphael_1680-1050.jpg">
-			<h1 style="color: #eee; background-color: rgba(0,0,0,0.5);">Relax</h1>
-			<br/><br/><br/><br/><br/><br/>
-			<figure><figcaption><cite><br /><br />The School of Athens / Raphael</cite></figcaption></figure>
-		</section>
-
-		<section class="boxed" data-background-image="images/shishkin_1680-1024.jpg">
-			<h1>Examples</h1>
-			<a href="https://github.com/jbrinley/wcjax-2016-demo/pulls">github.com/jbrinley/wcjax-2016-demo/pulls</a>
-			<figure><figcaption><cite>Morning in a Pine Forest / Ivan Shishkin</cite></figcaption></figure>
-		</section>
-
-		<section class="boxed" data-background-image="images/cezanne-orange-1920-1200.jpg">
-			<h1>Prioritize</h1>
-			<figure><figcaption><cite>Still Life with Apples and Oranges / Paul Cezanne</cite></figcaption></figure>
-		</section>
-
-		<section class="boxed" data-background-image="images/macke_1680-1050.jpg">
-			<h1>Wear hats</h1>
-			<figure><figcaption><cite>Park Restaurant / Auguste Macke</cite></figcaption></figure>
-		</section>
-
-		<section class="boxed" data-background-image="images/marc_1600-1200.jpg">
-			<h2>Resources</h2>
-			<h3><a href="http://flightless.us/wcjax2016/">flightless.us/wcjax2016</a></h3>
-			<ul>
-				<li><a href="https://pcottle.github.io/learnGitBranching/">Learn Git Branching / Peter Cottle</a></li>
-				<li><a href="https://www.atlassian.com/git/tutorials">Git Tutorials / Atlassian</a></li>
-				<li><a href="http://wordpress.tv/2015/12/13/morten-rand-hendriksen-github-for-the-rest-of-us/">Github for the Rest of Us / Morten Rand-Hendriksen</a></li>
-				<li><a href="http://blog.jetbrains.com/upsource/2015/07/23/what-to-look-for-in-a-code-review/">What to look for in a Code Review / Trisha Gee</a></li>
-				<li><a href="http://blog.fogcreek.com/effective-code-reviews-9-tips-from-a-converted-skeptic/">Effective code reviews / Gareth Wilson</a></li>
-				<li><a href="http://haacked.com/archive/2013/10/28/code-review-like-you-mean-it.aspx/">Code Review Like You Mean It / Phil Haack</a></li>
-			</ul>
-			<figure><figcaption><cite>Yellow Cow / Franz Marc</cite></figcaption></figure>
-		</section>
-
-		<section>
-			<h2>Jonathan Brinley</h2>
-			<p>http://xplus3.net/ • jonathan@tri.be • @jbrinley</p>
 			<p><img class="bare" width="1000" height="140" data-src="images/tribe-logo-color.png" alt="Modern Tribe" /></p>
-			<p><img class="bare" width="390" height="242" data-src="images/logo-large.png" alt="Flightless" /></p>
+		</section>
+
+		<section class="">
+			<h2>Simple Editorial Process</h2>
+			<img src="images/editorial-flowchart-basic.png" alt="basic editorial flowchart" style="height:60vh; width: auto;" />
+		</section>
+
+		<section class="">
+			<h2>More Advanced<br />Editorial Process</h2>
+			<img src="images/editorial-flowchart-advanced.png" alt="slightly more advanced editorial flowchart" style="height:50vh; width: auto;" />
+		</section>
+
+		<section data-background-image="images/Canaletto_1920-1200.jpg">
+			<h2>Academic Department<br />Editorial Process</h2>
+			<figure><figcaption><cite>Regatta view from Ca'Foscari / Canaletto</cite></figcaption></figure>
+			<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+		</section>
+
+		<section data-background-image="images/wp-admin-dashboard.png">
+
+		</section>
+
+		<section>
+			<h2>Roles</h2>
+			<ul>
+				<li>Administrator</li>
+				<li>Editor</li>
+				<li>Author</li>
+				<li>Contributor</li>
+				<li>Subscriber</li>
+			</ul>
+		</section>
+
+		<section>
+			<a href="https://codex.wordpress.org/Roles_and_Capabilities#Capability_vs._Role_Table"><img src="images/roles-abridged.png" /></a>
+			<a href="https://codex.wordpress.org/Roles_and_Capabilities#Capability_vs._Role_Table">https://codex.wordpress.org/Roles_and_Capabilities</a>
+		</section>
+
+		<section>
+			<h2>wp_usermeta</h2>
+			<img src="images/capabilities-in-db.png" alt="example of user roles in the database" />
+		</section>
+
+		<section>
+			<h2><code>WP_User::get_role_caps()</code></h2>
+			<pre><code class="php" data-trim data-noescape>
+$this->allcaps = array();
+foreach ( (array) $this->roles as $role ) {
+  $the_role = $wp_roles->get_role( $role );
+  $this->allcaps = array_merge( $this->allcaps, $the_role->capabilities );
+}
+			</code></pre>
+		</section>
+
+		<section>
+			<h2>Capabilities</h2>
+			<a href="https://github.com/WordPress/WordPress/blob/4.5-branch/wp-admin/includes/schema.php#L615-L629"><code>populate_roles()</code></a>
+		</section>
+
+		<section>
+			<h2><code>current_user_can()</code></h2>
+		</section>
+
+		<section>
+			<pre><code class="php" data-trim data-noescape>
+add_options_page(
+  'Super Secret Settings Page', // Page Title
+  'Secret Settings',            // Menu Title
+  'manage_secret_settings',     // Capability
+  'secret-settings',            // Slug
+  [ $this, 'render' ]           // Callback function
+)
+			</code></pre>
+			<p class="fragment"><code>current_user_can( 'manage_secret_settings' )</code></p>
+		</section>
+
+		<section>
+			<h2><code>current_user_can()</code></h2>
+			<pre><code class="php" data-trim data-noescape style="text-align: center;">
+return call_user_func_array( array( $current_user, 'has_cap' ), $args );
+			</code></pre>
+		</section>
+
+		<section>
+			<h2><code>WP_User::has_cap()</code></h2>
+			<pre><code class="php" data-trim data-noescape style="text-align: center;">
+$caps = call_user_func_array( 'map_meta_cap', $args );
+			</code></pre>
+		</section>
+
+		<section>
+			<h4 style="white-space: nowrap"><code>current_user_can( 'edit_post', $post_id )</code></h4>
+			<pre><code class="php" data-trim data-noescape>
+case 'edit_post':
+  if ( in_array( $post->post_status, [ 'publish', 'future' ], true ) ) {
+    $caps[] = $post_type->cap->edit_published_posts;
+  } elseif ( 'private' == $post->post_status ) {
+    $caps[] = $post_type->cap->edit_private_posts;
+  }
+			</code></pre>
+		</section>
+
+		<section>
+			<h2><code>map_meta_cap()</code></h2>
+			<img src="images/map_meta_cap.png" alt="diagram showing how meta caps map to caps" style="height:60vh; width: auto;" />
+		</section>
+
+		<section>
+			<h2><code>add_role()</code></h2>
+			<pre class="fragment"><code class="php" data-trim data-noescape>
+$role = add_role( 'theme_switcher' );
+
+$role->add_cap( 'read' );
+$role->add_cap( 'switch_themes' );
+			</code></pre>
+		</section>
+
+		<section>
+			<h2><code>add_role()</code></h2>
+			<pre><code class="php" data-trim data-noescape>
+$role = add_role( 'page_author' );
+
+$role->add_cap( 'read' );
+$role->add_cap( 'edit_pages' );
+$role->add_cap( 'publish_pages' );
+$role->add_cap( 'delete_pages' );
+$role->add_cap( 'edit_published_pages' );
+$role->add_cap( 'delete_published_pages' );
+$role->add_cap( 'upload_files' );
+$role->add_cap( 'level_1' );
+			</code></pre>
+		</section>
+
+		<section>
+			<h4><code>WP_User_Query::prepare_query()</code></h4>
+			<pre><code class="php" data-trim data-noescape>
+if ( isset( $qv['who'] ) && 'authors' == $qv['who'] && $blog_id ) {
+  $qv['meta_key'] = $wpdb->get_blog_prefix( $blog_id ) . 'user_level';
+  $qv['meta_value'] = 0;
+  $qv['meta_compare'] = '!=';
+}
+			</code></pre>
+		</section>
+
+		<section>
+			<pre><code class="php" data-trim data-noescape>
+add_action( 'admin_init', function() {
+  if ( get_option( 'my_user_roles_version', 0 ) < 1 ) {
+    my_register_roles_version_1();
+    update_option( 'my_user_roles_version', 1 );
+  }
+} );
+			</code></pre>
+		</section>
+
+		<section>
+			<h2><code>get_role()</code></h2>
+			<pre><code class="php" data-trim data-noescape>
+$role = get_role( 'author' );
+
+$role->add_cap( 'edit_pages' );
+$role->add_cap( 'publish_pages' );
+$role->add_cap( 'delete_pages' );
+$role->remove_cap( 'edit_published_posts' );
+$role->remove_cap( 'delete_published_posts' );
+			</code></pre>
+		</section>
+
+		<section>
+			<h2>Custom Post Types</h2>
+			<code>register_post_type( 'story' )</code>
+		</section>
+
+		<section>
+			<h2>Custom Post Types</h2>
+			<h3><code>capability_type</code></h3>
+			<pre><code class="php" data-trim data-noescape>
+register_post_type( 'story', [
+	'label'           => __( 'Stories' ),
+	// ... many more args
+	'capability_type' => [ 'story', 'stories' ],
+] );
+			</code></pre>
+
+			<p class="fragment"><code>current_user_can( 'edit_stories' )</code></p>
+		</section>
+
+		<section>
+			<h2>Custom Post Types</h2>
+			<h3><code>capabilities</code></h3>
+			<pre><code class="php" data-trim data-noescape>
+register_post_type( 'story', [
+	'label'           => __( 'Stories' ),
+	// ... many more args
+	'capabilities' => [
+		'publish_posts' => 'special_publish_posts',
+	],
+] );
+			</code></pre>
+
+			<p class="fragment"><code>current_user_can( 'special_publish_posts' )</code></p>
+		</section>
+
+		<section>
+			<h2>Custom Post Types</h2>
+			<h3><code>map_meta_cap</code></h3>
+			<pre><code class="php" data-trim data-noescape>
+register_post_type( 'story', [
+	'label'           => __( 'Stories' ),
+	// ... many more args
+	'capability_type' => [ 'story', 'stories' ],
+	'map_meta_cap'    => true,
+] );
+			</code></pre>
+
+			<p class="fragment"><code>current_user_can( 'edit_post', $story_id )</code></p>
+		</section>
+
+		<section>
+			<h3><code>map_meta_cap()</code></h3>
+			<img src="images/map_meta_cap_stories.png" alt="diagram showing how meta caps map to caps for a cpt" style="height:60vh; width: auto;" />
+		</section>
+
+		<section>
+			<h2>Custom Post Types</h2>
+			<h3><code>map_meta_cap</code></h3>
+			<pre><code class="php" data-trim data-noescape>
+register_post_type( 'story', [
+	'label'           => __( 'Stories' ),
+	// ... many more args
+	'capability_type' => [ 'story', 'stories' ],
+	'map_meta_cap'    => false,
+] );
+			</code></pre>
+
+			<p class="fragment"><code>add_filter( 'map_meta_cap', 'your_mapping_method', 10, 4 )</code></p>
+		</section>
+
+		<section>
+			<h2>Custom Post Types</h2>
+			<pre><code class="php" data-trim data-noescape>
+$caps = [
+	'read',                    'edit_posts',
+	'edit_others_posts',       'edit_private_posts',
+	'edit_published_posts',    'publish_posts',
+	'read_private_posts',      'delete_posts',
+	'delete_private_posts',    'delete_published_posts',
+	'delete_others_posts',     'create_posts',
+];
+
+$pto = get_post_type_object( 'story' );
+
+foreach ( [ 'administrator', 'editor' ] as $role_name ) {
+	$role = get_role( $role_name );
+	foreach ( $caps as $cap ) {
+		$role->add_cap( $pto->cap->{ $cap } );
+	}
+}
+			</code></pre>
+		</section>
+
+		<section>
+			<h2>Super Admins</h2>
+			<pre><code class="php" data-trim data-noescape>
+// Multisite super admin has all caps by definition,
+// unless specifically denied.
+if ( is_multisite() && is_super_admin( $this->ID ) ) {
+	if ( in_array('do_not_allow', $caps) )
+		return false;
+	return true;
+}
+			</code></pre>
+		</section>
+
+		<section>
+			<img class="bare" src="images/roles_basic.png" alt="venn diagram showing two non-overlapping roles" style="height: 500px; width: auto;" />
+		</section>
+
+		<section>
+			<img class="bare" src="images/roles_complex.png" alt="venn diagram showing the overlap of conditions for a role to edit a story" style="height: 500px; width: auto;" />
+		</section>
+
+		<section>
+			<img class="bare" src="images/roles_more_complex.png" alt="venn diagram showing the overlap of conditions for a role to edit a story" style="height: 500px; width: auto;" />
+		</section>
+
+		<section>
+			<h2><code>user_has_cap</code></h2>
+
+			<pre><code class="php" data-trim data-noescape>
+add_filter( 'user_has_cap', 'filter_user_caps', 10, 4 );
+function filter_user_caps( $caps_the_user_has, $caps_the_user_needs, $args, $user ) {
+	$originally_requested_cap = $args[0];
+	$user_id = $args[1];
+	$other_args = array_slice( $args, 2 ); // varies per $arg[0]
+}
+			</code></pre>
+		</section>
+
+		<section data-background-image="images/group_post.png" data-background-size="contain">
+		</section>
+
+		<section>
+			<h2><code>user_has_cap</code></h2>
+			<pre><code class="php" data-trim data-noescape>
+foreach ( $groups as $group ) {
+  $access_level = $group->get_permissions( $post_type );
+  if (
+       $access_level == Group::PERMISSION_EDITOR
+    || $group->is_assigned_to_post( $post_id )
+  ) {
+    $user_caps[ $post_type_object->cap->edit_others_posts ]      = true;
+    $user_caps[ $post_type_object->cap->read_private_posts ]     = true;
+    $user_caps[ $post_type_object->cap->delete_posts ]           = true;
+    $user_caps[ $post_type_object->cap->delete_private_posts ]   = true;
+    $user_caps[ $post_type_object->cap->delete_published_posts ] = true;
+    $user_caps[ $post_type_object->cap->delete_others_posts ]    = true;
+    $user_caps[ $post_type_object->cap->edit_private_posts ]     = true;
+  }
+}
+			</code></pre>
+		</section>
+
+		<section>
+			<h2>Jonathan Brinley</h2>
+			<p>@jbrinley • jonathan@tri.be</p>
+			<p><img class="bare" width="1000" height="140" data-src="images/tribe-logo-color.png" alt="Modern Tribe" /></p>
 		</section>
 
 
@@ -308,10 +471,13 @@
 	// Full list of configuration options available at:
 	// https://github.com/hakimel/reveal.js#configuration
 	Reveal.initialize({
-		controls: true,
 		progress: true,
 		history: true,
 		center: true,
+		width: '100%',
+		height: '90%',
+		maxScale: 1,
+		controls: false,
 
 		transition: 'slide', // none/fade/slide/convex/concave/zoom
 
