@@ -237,6 +237,21 @@ case 'edit_post':
 		</section>
 
 		<section>
+			<h2><code>map_meta_cap()</code></h2>
+			<pre><code class="php" data-trim data-noescape>
+add_filter( 'map_meta_cap', 'add_approval_requirements', 10, 4 );
+function add_approval_requirement( $required_caps, $requested_cap, $user_id, $args ) {
+  if ( $requested_cap == 'publish_post' ) {
+    if ( ! is_approved( $args[0] ) ) {
+      $required_caps[] = 'publish_unapproved_posts';
+    }
+  }
+  return $required_caps;
+}
+			</code></pre>
+		</section>
+
+		<section>
 			<h2><code>add_role()</code></h2>
 			<pre class="fragment"><code class="php" data-trim data-noescape>
 $role = add_role( 'theme_switcher' );
@@ -477,7 +492,7 @@ foreach ( $groups as $group ) {
 		width: '100%',
 		height: '90%',
 		maxScale: 1,
-		controls: false,
+		controls: true,
 
 		transition: 'slide', // none/fade/slide/convex/concave/zoom
 
